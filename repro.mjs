@@ -1,9 +1,7 @@
 // Run through `emulators:exec` (see package.json) so the Storage emulator is up.
 //
 // 1. Upload an object with the Admin SDK (a direct write, not the Firebase
-//    Storage API), setting `firebaseStorageDownloadTokens` in its custom
-//    metadata. This is the documented way to give such an object a download
-//    token.
+//    Storage API) with `firebaseStorageDownloadTokens` in its custom metadata.
 // 2. Ask the web SDK for its download URL.
 //
 // Google's emulator: getDownloadURL resolves to a URL containing the token.
