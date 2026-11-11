@@ -4,7 +4,10 @@ import { getStorage as getAdminStorage } from "firebase-admin/storage";
 import { initializeApp as initializeClient } from "firebase/app";
 import { connectStorageEmulator, getDownloadURL, getStorage, ref } from "firebase/storage";
 
-const PROJECT_ID = "demo-repro", BUCKET = `${PROJECT_ID}.appspot.com`, HOST = "127.0.0.1", PORT = 9199;
+const PROJECT_ID = "demo-repro",
+    BUCKET = `${PROJECT_ID}.appspot.com`,
+    HOST = "127.0.0.1",
+    PORT = 9199;
 process.env.FIREBASE_STORAGE_EMULATOR_HOST ??= `${HOST}:${PORT}`;
 const admin = initializeAdmin({ projectId: PROJECT_ID, storageBucket: BUCKET });
 const client = initializeClient({ projectId: PROJECT_ID, storageBucket: BUCKET }, "client");
@@ -25,11 +28,19 @@ for (const withToken of [true, false]) {
     try {
         url = await getDownloadURL(ref(storage, path));
         console.log("getDownloadURL:", url, url.includes("token=") ? "(has token)" : "(NO token)");
-    } catch (e) { console.log("getDownloadURL threw:", e.code ?? e); }
-    const urls = { "returned URL": url, "no token": `http://${HOST}:${PORT}/v0/b/${BUCKET}/o/${encodeURIComponent(path)}?alt=media`, "bogus token": `http://${HOST}:${PORT}/v0/b/${BUCKET}/o/${encodeURIComponent(path)}?alt=media&token=bogus` };
+    } catch (e) {
+        console.log("getDownloadURL threw:", e.code ?? e);
+    }
+    const urls = {
+        "returned URL": url,
+        "no token": `http://${HOST}:${PORT}/v0/b/${BUCKET}/o/${encodeURIComponent(path)}?alt=media`,
+        "bogus token": `http://${HOST}:${PORT}/v0/b/${BUCKET}/o/${encodeURIComponent(path)}?alt=media&token=bogus`,
+    };
     for (const [label, u] of Object.entries(urls)) {
         if (!u) continue;
         const r = await fetch(u);
-        console.log(`  GET (${label}): ${r.status} ${JSON.stringify((await r.text()).slice(0, 60))}`);
+        console.log(
+            `  GET (${label}): ${r.status} ${JSON.stringify((await r.text()).slice(0, 60))}`,
+        );
     }
 }
