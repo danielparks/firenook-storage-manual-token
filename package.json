@@ -4,7 +4,9 @@
     "type": "module",
     "scripts": {
         "test:firenook": "firenook emulators:exec --non-interactive --project demo-repro --only storage \"node repro.mjs\"",
-        "test:google": "firebase emulators:exec --non-interactive --project demo-repro --only storage \"node repro.mjs\""
+        "test:google": "firebase emulators:exec --non-interactive --project demo-repro --only storage \"node repro.mjs\"",
+        "experiment:firenook": "firenook emulators:exec --non-interactive --project demo-repro --only storage \"node experiment.mjs\"",
+        "experiment:google": "firebase emulators:exec --non-interactive --project demo-repro --only storage \"node experiment.mjs\""
     },
     "dependencies": {
         "firebase": "13.2.0",
