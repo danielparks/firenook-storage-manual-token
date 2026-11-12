@@ -1,65 +1,83 @@
-# Firenook: Cannot create downloadable storage object from Admin SDK
+# Firenook: Storage object does not use download tag assigned with Admin SDK
 
-A storage object written with the Firebase Admin SDK should be downloadable with
-`getDownloadURL` from the web client SDK. This works in the Google emulator, but
-not in Firenook.
+> [!NOTE]
+> Previously this repo was for [Firenook #174 — Cannot create downloadable
+> storage object from Admin SDK][firenook-174] (see [old version of this repo
+> ][tag-for-firenook-174]).
 
-Setting `firebaseStorageDownloadTokens` on the object does not work either.
+When creating a storage object with the Firebase Admin SDK it is possible to
+explicitly set the download token in the objects metadata. The Google emulator
+uses the token from the metadata, but Firenook ignores it and creates its own.
 
 ## Code
 
-[repro.mjs](repro.mjs) has a full test case, but the core of it is that the code
-below should produce a storage object that `getDownloadURL` will work on:
+[experiment.mjs](experiment.mjs) has a full test case, but here’s the gist:
 
-```typescript
+```javascript
 const admin = initializeApp({ projectId: PROJECT_ID, storageBucket: BUCKET });
 const file = getStorage(admin).bucket().file(PATH);
-await file.save(BUFFER, { contentType: CONTENT_TYPE });
+await file.save(BUFFER, {
+    contentType: CONTENT_TYPE,
+    metadata: { metadata: { firebaseStorageDownloadTokens: TOKEN } },
+});
+
+console.log(
+    "before. tokens match?",
+    file.getMetadata().metadata.firebaseStorageDownloadTokens === TOKEN,
+);
+const client = initializeApp({ projectId: PROJECT_ID, storageBucket: BUCKET }, "client");
+const _url = await getDownloadURL(ref(getStorage(client), PATH));
+console.log(
+    "after. tokens match?",
+    file.getMetadata().metadata.firebaseStorageDownloadTokens === TOKEN,
+);
 ```
 
-It works in Google’s emulator. In Firenook, the web SDK’s `getDownloadURL`
-instead fails with `storage/no-download-url`.
+In the Google emulator the token will match before and after `getDownloadURL`.
+
+In the Firenook the token will match before `getDownloadURL`, but afterward it
+will be a new, generated token.
 
 ## Runnable test case
 
 ```sh
 npm install
-npm run test:google    # passes: prints a URL containing a token
-npm run test:firenook  # fails:  storage/no-download-url
+npm run test:google
+npm run test:firenook
 ```
 
 Google’s emulator needs JDK 21+.
 
-Trimmed output:
+This also checks what happend if the token is not set. Trimmed output:
 
 ```
 ❯ npm run test:google
 [ . . . ]
-admin sees metadata.metadata: undefined
-getDownloadURL OK: http://127.0.0.1:9199/v0/b/demo-repro.appspot.com/o/test%2Fpath?alt=media&token=e1a87b0e-de6a-4fad-908d-33c1c240de36
-admin sees metadata.metadata: {"firebaseStorageDownloadTokens":"e1a87b0e-de6a-4fad-908d-33c1c240de36"}
-✔  Script exited successfully (code 0)
+
+test/with-token token matches before? true
+test/with-token token matches after? true
+
+[ . . . ]
+
+test/without-token token empty before? true
+test/without-token token after? 500bb45e-63b0-4788-99a4-d0cccaea0b67
+
 [ . . . ]
 ❯ npm run test:firenook
 [ . . . ]
-Firenook 0.2.2; engine 070297f1c1fb75b328556c3481af26cf7b5dcacc; disk/WAL state /Users/daniel/personal/projects/firenook-storage-manual-token/.firenook/runs/session-DAzZI5/state
+Firenook 0.2.3; engine 2294132253f03395b0d9bafe391d35075e928112; disk/WAL state /Users/daniel/personal/projects/firenook-storage-manual-token/.firenook/runs/session-CtPSzG/state
 [ . . . ]
-All emulators ready
-admin sees metadata.metadata: undefined
-FAIL: getDownloadURL threw: storage/no-download-url
+
+test/with-token token matches before? true
+test/with-token token matches after? false
+
+[ . . . ]
+
+test/without-token token empty before? true
+test/without-token token after? ae0cfa01-0e09-428b-ad6d-2f7c2c49999c
+
 [ . . . ]
 ```
 
-## Manually setting the token
-
-[experiment.mjs](experiment.mjs) shows that the token can be explicitly set with
-`{ metadata: { metadata: { firebaseStorageDownloadTokens: "whatever" } } }`.
-
-```sh
-npm install
-npm run experiment:google
-npm run experiment:firenook
-```
-
-The Google emulator honors the passed token, but the Firenook emulator still
-doesn’t produce a download URL.
+[firenook-174]: https://github.com/firenook-dev/firenook/issues/174
+[tag-for-firenook-174]: https://github.com/danielparks/firenook-storage-manual-token/tree/firenook-174
