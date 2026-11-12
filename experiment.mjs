@@ -42,9 +42,9 @@ for (const token of ["FAKE-TOKEN", null]) {
     }
     const after = await adminMetadata(file);
 
-    const response = url && await fetch(url);
+    const response = url && (await fetch(url));
     if (url) {
-        const text = await response?.text()
+        const text = await response?.text();
         if (response.status === 200 && text === REFERENCE_TEXT) {
             console.log("GET download matches");
         } else {
@@ -56,11 +56,17 @@ for (const token of ["FAKE-TOKEN", null]) {
 
     console.log();
     if (token) {
-        console.log(`${path} token matches before?`, before?.firebaseStorageDownloadTokens === token)
-        console.log(`${path} token matches after?`, after?.firebaseStorageDownloadTokens === token)
+        console.log(
+            `${path} token matches before?`,
+            before?.firebaseStorageDownloadTokens === token,
+        );
+        console.log(`${path} token matches after?`, after?.firebaseStorageDownloadTokens === token);
     } else {
-        console.log(`${path} token empty before?`, before?.firebaseStorageDownloadTokens === undefined)
-        console.log(`${path} token after?`, after?.firebaseStorageDownloadTokens)
+        console.log(
+            `${path} token empty before?`,
+            before?.firebaseStorageDownloadTokens === undefined,
+        );
+        console.log(`${path} token after?`, after?.firebaseStorageDownloadTokens);
     }
     console.log();
 }
